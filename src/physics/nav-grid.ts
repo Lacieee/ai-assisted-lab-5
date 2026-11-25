@@ -1,4 +1,5 @@
-const CELL = 0.5;
+// 0.25 m: at 0.5 m the grid missed 0.9 m gaps between thin poles and seats (BUGS.md #16)
+const CELL = 0.25;
 const AGENT_RADIUS = 0.32;
 const STEP = 0.4;
 const HEADROOM = 1.75;
@@ -17,7 +18,12 @@ export class NavGrid {
   openStamp;
   searchId = 0;
   heap = [];
-  constructor(world) {
+  /**
+   * @param seeds Points agents actually stand on (player start, enemy spawns). When given, each cell's
+   * floor is the highest surface that can be walked to from a seed, so roofs and ceilings nobody can
+   * climb onto don't hide the floor beneath them (BUGS.md #16). Without seeds: the highest surface.
+   */
+  constructor(world, seeds: number[][] = []) {
     this.world = world;
     const b = world.bounds;
     this.originX = Math.floor(b.min[0]);
@@ -31,36 +37,75 @@ export class NavGrid {
     this.cameFrom = new Int32Array(n);
     this.closed = new Uint32Array(n);
     this.openStamp = new Uint32Array(n);
-    this.bake();
+    this.bake(seeds);
   }
-  bake() {
+  bake(seeds: number[][]) {
     const boxes = this.world.boxes;
     const cand = [];
+    const n = this.w * this.h;
+    // every surface an agent could stand on in each cell, lowest first; NaN marks no headroom
+    const surfaces: number[][] = new Array(n);
     for (let cz = 0; cz < this.h; cz++) {
       for (let cx = 0; cx < this.w; cx++) {
         const x = this.originX + (cx + 0.5) * CELL;
         const z = this.originZ + (cz + 0.5) * CELL;
         this.world.query(x - AGENT_RADIUS, z - AGENT_RADIUS, x + AGENT_RADIUS, z + AGENT_RADIUS, cand);
-        let floorY = -Infinity;
+        const tops = [];
         for (const i of cand) {
           const bx = boxes[i];
-          if (x >= bx.min[0] && x <= bx.max[0] && z >= bx.min[2] && z <= bx.max[2] && bx.max[1] <= MAX_FLOOR && bx.max[1] > floorY) {
-            floorY = bx.max[1];
-          }
+          if (x >= bx.min[0] && x <= bx.max[0] && z >= bx.min[2] && z <= bx.max[2] && bx.max[1] <= MAX_FLOOR && !tops.includes(bx.max[1]))
+            tops.push(bx.max[1]);
         }
-        if (floorY === -Infinity)
-          continue;
-        let blocked = false;
-        for (const i of cand) {
-          const bx = boxes[i];
-          if (bx.min[0] < x + AGENT_RADIUS && bx.max[0] > x - AGENT_RADIUS && bx.min[2] < z + AGENT_RADIUS && bx.max[2] > z - AGENT_RADIUS && bx.max[1] > floorY + STEP && bx.min[1] < floorY + HEADROOM) {
-            blocked = true;
-            break;
+        tops.sort((p, q) => p - q);
+        surfaces[cz * this.w + cx] = tops.map((floorY) => {
+          for (const i of cand) {
+            const bx = boxes[i];
+            if (bx.min[0] < x + AGENT_RADIUS && bx.max[0] > x - AGENT_RADIUS && bx.min[2] < z + AGENT_RADIUS && bx.max[2] > z - AGENT_RADIUS && bx.max[1] > floorY + STEP && bx.min[1] < floorY + HEADROOM)
+              return NaN;
           }
-        }
-        if (!blocked)
-          this.floor[cz * this.w + cx] = floorY;
+          return floorY;
+        });
       }
+    }
+    // flood-fill from the seeds over surfaces with headroom, stepping at most STEP up or down
+    const reached: Set<number>[] = Array.from({ length: n }, () => new Set());
+    const queue: [number, number][] = [];
+    for (const p of seeds) {
+      const c = this.cellOf(p[0], p[2]);
+      if (c < 0)
+        continue;
+      let best = NaN;
+      for (const y of surfaces[c])
+        if (!Number.isNaN(y) && Math.abs(y - p[1]) < 1.2 && !(Math.abs(best - p[1]) <= Math.abs(y - p[1])))
+          best = y;
+      if (!Number.isNaN(best) && !reached[c].has(best)) {
+        reached[c].add(best);
+        queue.push([c, best]);
+      }
+    }
+    while (queue.length > 0) {
+      const [c, y] = queue.pop();
+      const cx = c % this.w, cz = (c - cx) / this.w;
+      for (const [dx, dz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+        const nx = cx + dx, nz = cz + dz;
+        if (nx < 0 || nz < 0 || nx >= this.w || nz >= this.h)
+          continue;
+        const nb = nz * this.w + nx;
+        for (const ny of surfaces[nb]) {
+          if (!Number.isNaN(ny) && Math.abs(ny - y) <= STEP && !reached[nb].has(ny)) {
+            reached[nb].add(ny);
+            queue.push([nb, ny]);
+          }
+        }
+      }
+    }
+    for (let c = 0; c < n; c++) {
+      const tops = surfaces[c];
+      if (tops.length === 0)
+        continue;
+      const walkable = tops.filter((y) => reached[c].has(y));
+      // no reachable surface: the original rule, the highest surface if it has headroom
+      this.floor[c] = walkable.length > 0 ? walkable[walkable.length - 1] : tops[tops.length - 1];
     }
   }
   cellOf(x, z) {
@@ -87,7 +132,7 @@ export class NavGrid {
       return c0;
     const cx0 = Math.floor((x - this.originX) / CELL);
     const cz0 = Math.floor((z - this.originZ) / CELL);
-    for (let ring = 1; ring <= 6; ring++) {
+    for (let ring = 1; ring <= 12; ring++) { // 3 m at CELL = 0.25
       let best = -1;
       let bestD = Infinity;
       for (let dz = -ring; dz <= ring; dz++) {
@@ -112,7 +157,7 @@ export class NavGrid {
     }
     return -1;
   }
-  findPath(from, to, maxExpansions = 4e3) {
+  findPath(from, to, maxExpansions = 16e3) {
     const start = this.nearestWalkable(from[0], from[2], from[1]);
     const goal = this.nearestWalkable(to[0], to[2], to[1]);
     if (start < 0 || goal < 0)

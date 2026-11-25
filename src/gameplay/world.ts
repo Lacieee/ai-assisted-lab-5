@@ -5,6 +5,7 @@ import { BULLET_SPEED, WEAPONS, isGun, isWeapon, newItem } from "./items";
 import { WaveDirector } from "./waves";
 import { stepProjectiles } from "./projectiles";
 import { REST_ROT, stepProps } from "./props";
+import { standingPoints } from "../levels/level-builder";
 import { NavGrid } from "../physics/nav-grid";
 import { StaticWorld } from "../physics/static-world";
 import type { LevelDef } from "../levels/types";
@@ -47,7 +48,7 @@ export class World {
     } else {
       const boxes = def.boxes.filter((b) => b.collide).map((b) => ({ min: [...b.min], max: [...b.max] }));
       this.static = new StaticWorld(boxes);
-      this.nav = new NavGrid(this.static);
+      this.nav = new NavGrid(this.static, standingPoints(def));
     }
     const p = def.player;
     this.player = {

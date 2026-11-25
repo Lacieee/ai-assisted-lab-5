@@ -77,3 +77,27 @@ describe("BUGS.md #15: nobody starts inside level geometry", () => {
     });
   }
 });
+
+import { buildLevelMesh } from "../src/app/level-loader";
+
+describe("BUGS.md #16: enemies can path to the player", () => {
+  const device = { createBuffer: (d: { size: number }) => ({ getMappedRange: () => new ArrayBuffer(d.size), unmap() {}, destroy() {} }) };
+  (globalThis as any).GPUBufferUsage ??= { VERTEX: 32, INDEX: 16 };
+  it("1-2: from the platform into the carriage", () => {
+    const { shared } = buildLevelMesh(device, LEVELS[1]);
+    expect(shared.nav.findPath([4, 0, 0], [0, 0, 2])).not.toBeNull();
+  });
+  // every enemy spawn must have a walking route to where the player starts
+  for (const def of LEVELS) {
+    it(`level ${def.id}: every spawn reaches the player start`, () => {
+      const { shared } = buildLevelMesh(device, def);
+      // marksmen are snipers placed on perches; they hold position instead of walking to the player
+      const bad = def.waves.flatMap((w) => w.spawns).filter((s) => s.kind !== "marksman").filter((s) => {
+        const pos = s.pos.length === 2 ? [s.pos[0], 0, s.pos[1]] : s.pos;
+        const spot = shared.static.findFreeSpot([pos[0], pos[1] + 0.05, pos[2]], 0.3, 1.8) ?? pos;
+        return shared.nav.findPath(spot, def.player.pos, 20000) === null;
+      }).map((s) => `${s.kind} at ${s.pos}`);
+      expect(bad).toEqual([]);
+    });
+  }
+});

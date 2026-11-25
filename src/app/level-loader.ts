@@ -1,3 +1,4 @@
+import { standingPoints } from "../levels/level-builder";
 import { NavGrid } from "../physics/nav-grid";
 import { StaticWorld } from "../physics/static-world";
 import { MeshBuilder } from "../render/mesh-builder";
@@ -7,7 +8,7 @@ export function buildLevelMesh(device, def) {
   const scene = buildLevelScene(device, def);
   const boxes = def.boxes.filter((b) => b.collide).map((b) => ({ min: [b.min[0], b.min[1], b.min[2]], max: [b.max[0], b.max[1], b.max[2]] }));
   const st = new StaticWorld(boxes);
-  const nav = new NavGrid(st);
+  const nav = new NavGrid(st, standingPoints(def));
   return { scene, shared: { static: st, nav } };
 }
 function buildLevelScene(device, def) {

@@ -123,3 +123,19 @@ overlap on the y axis by snapping to the top of the box, so the walkers popped u
 could not be cleared. In 1-3 both opening rushers spawned inside 2 m crates and ended up on top of them. The
 player also started inside a pole in 1-2.
 **Why it's a bug:** a level that can't be finished, through no fault of the player.
+
+### 16. Enemies can't find a way to the player in 1-2 (and four other levels)
+**Status: FIXED** — `NavGrid` keeps the highest surface that can be *walked to* from the player start or an
+enemy spawn, and its cells are 0.25 m instead of 0.5 m. Regression tests: `test/playability.test.ts`
+("enemies can path to the player", every spawn in all 15 levels except perched marksmen).
+
+Two causes, both in `src/physics/nav-grid.ts`:
+1. `bake()` took the **highest** surface below 3.3 m in each cell. Under any low ceiling that is the ceiling.
+   The whole carriage interior in 1-2 was mapped as its roof (y = 2.9), so there was no path from the
+   platform into the carriage. The second wave pressed itself against the outside of the carriage wall next to
+   the player, forever. 1-5, 3-2, 3-4 and 3-5 had unreachable spawns for the same reason.
+2. With 0.5 m cells sampled only at their centres, the 0.9 m gap between a carriage pole and the seats
+   (wide enough for a 0.6 m enemy) fell between samples, so the player's spot was a sealed pocket.
+
+**Why it's a bug:** found by playing. In 1-2 the bot timed out after 85 s of game time with enemies stuck at a
+wall, and the level could not be finished.

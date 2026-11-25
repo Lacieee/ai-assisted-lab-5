@@ -103,3 +103,9 @@ export function level(meta: LevelMeta, build: (b: LevelBuilder) => void): LevelD
   build(b);
   return { ...meta, boxes: b.boxes };
 }
+
+/** Points agents are known to stand on: the player start and every enemy spawn (for NavGrid seeds). */
+export function standingPoints(def: LevelDef): number[][] {
+  const spawns = def.waves.flatMap((w) => w.spawns).map((s) => (s.pos.length === 2 ? [s.pos[0], 0, s.pos[1]] : [...s.pos]));
+  return [[...def.player.pos], ...spawns];
+}
