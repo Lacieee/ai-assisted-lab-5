@@ -54,8 +54,13 @@ export class Input {
     target.addEventListener("contextmenu", (e) => e.preventDefault());
     target.addEventListener("click", () => this.requestPointerLock());
   }
+  /**
+   * Dev-only: with `?nolock` in the URL the game behaves as if the pointer were locked. For
+   * automated play in browsers that refuse pointer lock (embedded panes). Never true in production builds.
+   */
+  readonly simulateLock = import.meta.env.DEV && new URLSearchParams(location.search).has("nolock");
   get pointerLocked() {
-    return document.pointerLockElement === this.target;
+    return this.simulateLock || document.pointerLockElement === this.target;
   }
   requestPointerLock() {
     if (this.pointerLocked)

@@ -21,6 +21,9 @@ async function boot() {
     return;
   }
   game = new Game(gfx, canvas, overlayEl);
+  // Dev-only handle for inspecting state from the browser console; stripped from production builds.
+  if (import.meta.env.DEV)
+    (window as any).__game = game;
   game.start();
 }
 boot().catch((err) => {
