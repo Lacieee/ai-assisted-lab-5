@@ -138,14 +138,19 @@ export function playLevel(M: Impl, levelIndex: number, frames: number): string[]
     time.beginFrame(now);
     const dt = time.realDt;
     // --- Game.frame(), "playing" state
-    player.update(input, dt, world, look, true);
-    const f = player.toFrame(input.wasPressed("fire"), input.wasPressed("throw"), input.wasPressed("interact"));
-    const acted = world.applyPlayerFrame(f);
-    recorder.push(f);
-    if (acted) driver.actionKick();
-    const busy = world.player.burstLeft > 0;
-    // Same argument order as src/app/game.ts (see BUGS.md #2) — the harness mirrors the game, bugs included.
-    time.timeScale = driver.update(dt, M.WALK_SPEED, player.planarSpeed, player.lookSpeed, !player.grounded, busy);
+    if (M.runPlayerFrame) {
+      // the refactored code: the same function Game.frame() calls
+      time.timeScale = M.runPlayerFrame({ player, world, driver, recorder }, input, dt, look);
+    } else {
+      // the original bundle had this inline in Game.frame()
+      player.update(input, dt, world, look, true);
+      const f = player.toFrame(input.wasPressed("fire"), input.wasPressed("throw"), input.wasPressed("interact"));
+      const acted = world.applyPlayerFrame(f);
+      recorder.push(f);
+      if (acted) driver.actionKick();
+      const busy = world.player.burstLeft > 0;
+      time.timeScale = driver.update(dt, M.WALK_SPEED, player.planarSpeed, player.lookSpeed, !player.grounded, busy);
+    }
     // --- Loop: fixed steps
     time.advanceSim();
     while (time.consumeStep()) world.step(M.FIXED_STEP);

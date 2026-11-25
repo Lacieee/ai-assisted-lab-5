@@ -8,7 +8,8 @@ import { FIXED_STEP } from "../engine/time";
 import { approach, clamp, dirFromYawPitch, lerp, lerpAngle, lerpN, v3 } from "../engine/vec3";
 import { enemyIsTwoHanded } from "../gameplay/enemy";
 import { ITEM_NAMES, WEAPONS, isGun } from "../gameplay/items";
-import { PlayerController, WALK_SPEED } from "../gameplay/player-controller";
+import { PlayerController } from "../gameplay/player-controller";
+import { runPlayerFrame } from "../gameplay/player-frame";
 import { ReplayPlayer, ReplayRecorder } from "../gameplay/replay";
 import { TimeScaleDriver } from "../gameplay/time-scale-driver";
 import { EYE_HEIGHT, World } from "../gameplay/world";
@@ -318,14 +319,7 @@ export class Game {
           t.timeScale = 0;
           break;
         }
-        this.player.update(input, dt, this.world, look, true);
-        const f = this.player.toFrame(input.wasPressed("fire"), input.wasPressed("throw"), input.wasPressed("interact"));
-        const acted = this.world.applyPlayerFrame(f);
-        this.recorder.push(f);
-        if (acted)
-          this.driver.actionKick();
-        const busy = this.world.player.burstLeft > 0;
-        t.timeScale = this.driver.update(dt, WALK_SPEED, this.player.planarSpeed, this.player.lookSpeed, !this.player.grounded, busy);
+        t.timeScale = runPlayerFrame(this, input, dt, look);
         this.runRealTime += dt;
         break;
       }

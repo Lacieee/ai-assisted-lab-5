@@ -12,3 +12,4 @@ export { computePose, createPose } from "../../src/visuals/pose";
 export { FxSystem } from "../../src/visuals/fx-system";
 export { Viewmodel } from "../../src/visuals/viewmodel";
 export { SYNTHS } from "../../src/audio/synths";
+export { runPlayerFrame } from "../../src/gameplay/player-frame";
