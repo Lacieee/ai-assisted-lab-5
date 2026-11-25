@@ -1,0 +1,26 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Dev server (Chrome, debug TS)",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://localhost:5173",
+      "webRoot": "${workspaceFolder}",
+      "sourceMaps": true,
+      "preLaunchTask": "vite: dev server",
+      "postDebugTask": "stop servers"
+    },
+    {
+      "name": "Production build (Chrome, preview)",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://localhost:4173",
+      "webRoot": "${workspaceFolder}",
+      "sourceMaps": true,
+      "resolveSourceMapLocations": ["${workspaceFolder}/dist/**", "!**/node_modules/**"],
+      "preLaunchTask": "vite: preview (after build)",
+      "postDebugTask": "stop servers"
+    }
+  ]
+}
