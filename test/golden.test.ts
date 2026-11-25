@@ -17,17 +17,24 @@ beforeAll(async () => {
   reference = await loadReference();
 });
 
-describe("refactor keeps behaviour identical to the original index.html", () => {
+describe("non-gameplay output identical to the original index.html", () => {
   it("level definitions", () => expect(levelData(cur)).toEqual(levelData(reference)));
   it("meshes, collision and navigation", () => expect(buildAllMeshes(cur)).toEqual(buildAllMeshes(reference)));
   it("particle effects", () => expect(runFx(cur)).toEqual(runFx(reference)));
   it("sound synthesis", () => expect(runSynths(cur)).toEqual(runSynths(reference)));
+});
+
+// Gameplay is allowed to change now that bugs are being fixed (see BUGS.md), so the simulation is
+// pinned by snapshots instead of by the original. The snapshots were first recorded from code that
+// matched the original exactly (commit 13def86 passed the side-by-side comparison). Every behaviour
+// change must update them in the same commit (`npx vitest run -u`) and explain the difference;
+// the snapshot diff shows the first frame where play diverges.
+describe("simulation snapshots", () => {
   for (let i = 0; i < 15; i++) {
     it(`simulation of level ${i}`, () => {
       const got = playLevel(cur, i, FRAMES_PER_LEVEL);
-      const want = playLevel(reference, i, FRAMES_PER_LEVEL);
       expect(got.length).toBeGreaterThan(FRAMES_PER_LEVEL / 10);
-      expect(got).toEqual(want);
+      expect(got).toMatchSnapshot();
     });
   }
 });
