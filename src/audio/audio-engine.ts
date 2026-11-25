@@ -1,4 +1,4 @@
-import { SYNTHS,  } from "./synths";
+import { SYNTHS } from "./synths";
 
 export class AudioEngine {
   ctx = null;

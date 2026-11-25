@@ -1,4 +1,4 @@
-import { ACT_NAMES,  } from "../levels/index";
+import { ACT_NAMES } from "../levels/index";
 
 const fmtTime = (s) => {
   const m2 = Math.floor(s / 60);

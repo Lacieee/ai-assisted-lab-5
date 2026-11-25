@@ -6,7 +6,7 @@ import { Input } from "../engine/input";
 import { Loop } from "../engine/loop";
 import { FIXED_STEP } from "../engine/time";
 import { approach, clamp, dirFromYawPitch, lerp, lerpAngle, lerpN, v3 } from "../engine/vec3";
-import { enemyIsTwoHanded,  } from "../gameplay/enemy";
+import { enemyIsTwoHanded } from "../gameplay/enemy";
 import { ITEM_NAMES, WEAPONS, isGun } from "../gameplay/items";
 import { PlayerController, WALK_SPEED } from "../gameplay/player-controller";
 import { ReplayPlayer, ReplayRecorder } from "../gameplay/replay";
