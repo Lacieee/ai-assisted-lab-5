@@ -190,3 +190,30 @@ The golden-master test was added afterwards and passes against that commit, whic
 **Note for Part 3:** fixing the bugs in BUGS.md *will* change behaviour, and the golden test will go red,
 which is the point. Each fix should come with an explanation of the expected difference. The reference
 copy should then be retired, or the golden test switched to comparing against the previous commit.
+
+## 6. Publishing on GitHub Pages
+
+**Live game: https://lacieee.github.io/ai-assisted-lab-5/** (needs a WebGPU browser: recent Chrome or Edge).
+
+The repository is https://github.com/Lacieee/ai-assisted-lab-5. Every push to `main` runs
+[`.github/workflows/deploy.yml`](.github/workflows/deploy.yml), which has two jobs:
+
+1. **build**: `npm ci` → `npm test` (golden-master, playability and playthrough tests) → `npm run build`
+   (typecheck + Vite bundle) → upload `dist/` as the Pages artifact. If any test fails, nothing is published.
+2. **deploy**: `actions/deploy-pages` publishes the artifact to the `github-pages` environment.
+
+Decisions that make it work from the Pages address and not only locally:
+
+- **Relative asset paths.** Pages serves the game from `/ai-assisted-lab-5/`, not from the site root, so
+  `vite.config.ts` sets `base: "./"`. The built `index.html` then loads `./assets/...`, which works under any
+  sub-path. This was checked before pushing by serving `dist/` under `/ai-assisted-lab-5/` locally.
+- **No CDN and no runtime fetches.** `wgpu-matrix` is bundled from npm, the shaders are inlined at build time
+  (`?raw` imports), and the audio is synthesized in code. The published site is self-contained.
+- **CI runs on ARM64 macOS with Node 24.14.1.** The simulation snapshots are bit-exact game states recorded on
+  Apple Silicon. The first CI run on Linux x64 failed because V8's `Math.sin/cos/atan2` can round the last bit
+  differently there, and a 40-second simulation amplifies that. Building on the same platform and Node version
+  the snapshots were recorded with fixed it. The deploy job itself runs on Linux.
+- **Repository settings (one-time):** Settings → Pages → Source: *GitHub Actions*, and `main` as the default
+  branch. The `github-pages` environment only accepts deployments from the default branch.
+- **Dev-only code stays out.** The `?nolock` switch and the `window.__game` handle used for automated play
+  exist only under `import.meta.env.DEV` and are absent from the published bundle.
