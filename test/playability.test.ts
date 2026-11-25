@@ -101,3 +101,23 @@ describe("BUGS.md #16: enemies can path to the player", () => {
     });
   }
 });
+
+import { Camera } from "../src/render/camera";
+
+describe("BUGS.md #17: mouse look direction", () => {
+  const lookOnce = (dx: number, dy: number) => {
+    const p = new PlayerController();
+    p.reset([0, 0, 0], 0);
+    p.look({ mouseDx: dx, mouseDy: dy }, 1 / 60, { sensitivity: 22e-4, invertY: false });
+    return p;
+  };
+  it("moving the mouse right turns the view right", () => {
+    const cam = new Camera();
+    const right = cam.right([0, 0, 0] as any); // camera's right at yaw 0: +x
+    const p = lookOnce(100, 0);
+    cam.yaw = p.yaw;
+    const fwd = cam.forward([0, 0, 0] as any);
+    expect(fwd[0] * right[0] + fwd[2] * right[2]).toBeGreaterThan(0.1);
+  });
+  it("moving the mouse up looks up", () => expect(lookOnce(0, -100).pitch).toBeGreaterThan(0.1));
+});

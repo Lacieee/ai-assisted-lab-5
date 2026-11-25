@@ -33,7 +33,7 @@ export class PlayerController {
   look(input, dt, s) {
     this.mouseDx = input.mouseDx;
     this.mouseDy = input.mouseDy;
-    this.yaw += input.mouseDx * s.sensitivity;
+    this.yaw -= input.mouseDx * s.sensitivity; // yaw grows to the left (see Camera.right); mouse right turns right
     this.pitch -= input.mouseDy * s.sensitivity * (s.invertY ? -1 : 1);
     this.pitch = clamp(this.pitch, -MAX_PITCH, MAX_PITCH);
     this.yaw %= Math.PI * 2;
