@@ -105,6 +105,38 @@ export class StaticWorld {
     }
     return false;
   }
+  /**
+   * Nearest place to stand at the same height as `pos` where a body of radius r and height h fits,
+   * has floor under it and is in sight of `pos` (so it never ends up behind a wall). Returns `pos`
+   * itself if it is already free, or null if nothing fits within maxDist.
+   */
+  findFreeSpot(pos: number[], r: number, h: number, maxDist = 4): number[] | null {
+    const fits = (x: number, z: number) =>
+      !this.overlapsAabb([x - r, pos[1], z - r], [x + r, pos[1] + h, z + r]) &&
+      this.overlapsAabb([x - 0.1, pos[1] - 0.15, z - 0.1], [x + 0.1, pos[1] - 0.01, z + 0.1]);
+    if (fits(pos[0], pos[2]))
+      return pos;
+    const eyeY = pos[1] + 1.2;
+    // Looking back from the candidate, the only thing allowed in the way is a box that contains pos
+    // itself (the pillar or crate the spawn point is inside).
+    const inSight = (x: number, z: number) => {
+      const dx = pos[0] - x, dz = pos[2] - z, l = Math.hypot(dx, dz);
+      const hit = this.raycast([x, eyeY, z], [dx / l, 0, dz / l], l);
+      if (!hit)
+        return true;
+      const b = this.boxes[hit.box];
+      return pos[0] >= b.min[0] && pos[0] <= b.max[0] && pos[2] >= b.min[2] && pos[2] <= b.max[2];
+    };
+    for (let d = 0.2; d <= maxDist + 1e-6; d += 0.2) {
+      for (let k = 0; k < 16; k++) {
+        const a = k / 16 * Math.PI * 2;
+        const x = pos[0] + Math.cos(a) * d, z = pos[2] + Math.sin(a) * d;
+        if (fits(x, z) && inSight(x, z))
+          return [x, pos[1], z];
+      }
+    }
+    return null;
+  }
   moveCharacter(pos, delta, r, h, stepHeight, canStep) {
     const res = { grounded: false, hitWall: false, hitCeiling: false };
     const maxD = Math.max(Math.abs(delta[0]), Math.abs(delta[1]), Math.abs(delta[2]));

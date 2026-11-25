@@ -46,3 +46,34 @@ describe("BUGS.md #2: time moves only when you move", () => {
     expect(ts).toBeGreaterThan(0.95);
   });
 });
+
+import { StaticWorld } from "../src/physics/static-world";
+
+/** Where a body of the given radius/height standing at pos overlaps solid level geometry. */
+function blockedAt(world: StaticWorld, pos: number[], r: number, h: number) {
+  return world.overlapsAabb([pos[0] - r, pos[1] + 0.05, pos[2] - r], [pos[0] + r, pos[1] + h, pos[2] + r]);
+}
+
+describe("BUGS.md #15: nobody starts inside level geometry", () => {
+  for (const def of LEVELS) {
+    it(`level ${def.id}: player start is free`, () => {
+      const st = new StaticWorld(def.boxes.filter((b) => b.collide).map((b) => ({ min: [...b.min], max: [...b.max] })));
+      expect(blockedAt(st, def.player.pos, 0.3, 1.75)).toBe(false);
+    });
+    it(`level ${def.id}: every enemy spawns standing at its spawn height, free of geometry`, () => {
+      // force every wave to fire at once so all spawns happen
+      const all = { ...def, maxActive: 99, waves: def.waves.map((w) => ({ ...w, when: { type: "start" as const }, delay: 0 })) };
+      const world = new World(all);
+      world.player.invulnerable = true;
+      for (let i = 0; i < 60; i++) world.step(1 / 120); // spawn-in takes 0.6 s; enemies don't move yet
+      const spawns = all.waves.flatMap((w) => w.spawns);
+      expect(world.enemies.length).toBe(spawns.length);
+      const bad = world.enemies.flatMap((e, k) => {
+        const s = spawns[k];
+        const y = s.pos.length === 2 ? 0 : s.pos[1];
+        return Math.abs(e.pos[1] - y) > 0.1 || blockedAt(world.static, e.pos, 0.3, 1.8) ? [`${e.kind} spawned at ${s.pos} ended at ${e.pos.map((v) => v.toFixed(2))}`] : [];
+      });
+      expect(bad).toEqual([]);
+    });
+  }
+});

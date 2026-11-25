@@ -108,3 +108,18 @@ because `removeDead` runs at the end of each step.
 skips both the retry and the warning.
 **Why it looks wrong:** it's minor, but a failed lock there is completely silent, and the game just sits
 frozen with the "click to lock" hint.
+
+## Found while playing (Part 3)
+
+### 15. Enemies spawned inside pillars and crates end up stranded on top of them
+**Status: FIXED** — `StaticWorld.findFreeSpot` moves a blocked spawn to the nearest free spot (≤ 1 m in
+every case but two at 2.4 m in 3-5), used by `WaveDirector.flush`. Level 1-2's player start moved off a pole.
+Regression tests: `test/playability.test.ts` ("nobody starts inside level geometry", all 15 levels).
+
+Eight levels place spawn points inside solid boxes. In 1-2 the walkers spawn at (0, ±12), exactly where the
+carriage's metal poles stand. An enemy that is spawning only moves vertically, and `moveAxis` resolves an
+overlap on the y axis by snapping to the top of the box, so the walkers popped up through the pole onto the
+**carriage roof (y = 2.9)**. There they pursued the player forever, out of sight and out of reach: the level
+could not be cleared. In 1-3 both opening rushers spawned inside 2 m crates and ended up on top of them. The
+player also started inside a pole in 1-2.
+**Why it's a bug:** a level that can't be finished, through no fault of the player.

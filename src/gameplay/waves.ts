@@ -1,6 +1,6 @@
 // Decides when each wave of a level fires and feeds its enemies into the world,
 // respecting the level's cap on how many enemies may be alive at once.
-import { createEnemy } from "./enemy";
+import { ENEMY_HEIGHT, ENEMY_RADIUS, createEnemy } from "./enemy";
 import type { SpawnDef } from "../levels/types";
 import type { World } from "./world";
 
@@ -70,7 +70,9 @@ export class WaveDirector {
     while (this.spawnQueue.length > 0 && world.enemies.length < max) {
       const q = this.spawnQueue.shift();
       const s = q.spawn;
-      const pos = s.pos.length === 2 ? [s.pos[0], 0.05, s.pos[1]] : [s.pos[0], s.pos[1] + 0.05, s.pos[2]];
+      const wanted = s.pos.length === 2 ? [s.pos[0], 0.05, s.pos[1]] : [s.pos[0], s.pos[1] + 0.05, s.pos[2]];
+      // A spawn point inside level geometry would get pushed up on top of it (BUGS.md #15).
+      const pos = world.static.findFreeSpot(wanted, ENEMY_RADIUS, ENEMY_HEIGHT) ?? wanted;
       const yaw = s.yaw ?? Math.atan2(-(world.player.pos[0] - pos[0]), -(world.player.pos[2] - pos[2]));
       const e = createEnemy(world.nextId++, s.kind, pos, yaw, s.weapon, !!s.idle, world.rng.next());
       if (initial)

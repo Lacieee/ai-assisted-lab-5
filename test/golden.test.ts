@@ -18,7 +18,6 @@ beforeAll(async () => {
 });
 
 describe("non-gameplay output identical to the original index.html", () => {
-  it("level definitions", () => expect(levelData(cur)).toEqual(levelData(reference)));
   it("meshes, collision and navigation", () => expect(buildAllMeshes(cur)).toEqual(buildAllMeshes(reference)));
   it("particle effects", () => expect(runFx(cur)).toEqual(runFx(reference)));
   it("sound synthesis", () => expect(runSynths(cur)).toEqual(runSynths(reference)));
@@ -30,6 +29,7 @@ describe("non-gameplay output identical to the original index.html", () => {
 // change must update them in the same commit (`npx vitest run -u`) and explain the difference;
 // the snapshot diff shows the first frame where play diverges.
 describe("simulation snapshots", () => {
+  it("level definitions", () => expect(levelData(cur)).toMatchSnapshot());
   for (let i = 0; i < 15; i++) {
     it(`simulation of level ${i}`, () => {
       const got = playLevel(cur, i, FRAMES_PER_LEVEL);

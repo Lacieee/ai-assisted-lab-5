@@ -7,8 +7,8 @@ const ENEMY_PARAMS = {
   rusher: { speed: 5.2, turnRate: 9, reaction: 0.25, aimError: 0, keepDist: 0, cooldownMul: 1, hp: 2, defaultWeapon: null },
   marksman: { speed: 1.1, turnRate: 3.2, reaction: 0.7, aimError: 1, keepDist: 40, cooldownMul: 1, hp: 2, defaultWeapon: "carbine" }
 };
-const ENEMY_RADIUS = 0.3;
-const ENEMY_HEIGHT = 1.8;
+export const ENEMY_RADIUS = 0.3;
+export const ENEMY_HEIGHT = 1.8;
 export const HEAD_OFFSET = 1.7;
 export const HEAD_RADIUS = 0.17;
 export const BODY_A = 0.25;
