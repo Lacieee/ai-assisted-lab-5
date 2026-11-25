@@ -4,6 +4,8 @@ import { BODY_A, BODY_B, BODY_RADIUS, HEAD_OFFSET, HEAD_RADIUS, createEnemy, ene
 import { BULLET_LIFE, BULLET_RADIUS, BULLET_SPEED, FRAGILE, ITEM_RADIUS, WEAPONS, isGun, isWeapon, newItem } from "./items";
 import { NavGrid } from "../physics/nav-grid";
 import { StaticWorld, segmentCapsule, segmentSphere } from "../physics/static-world";
+import type { LevelDef } from "../levels/types";
+import type { Enemy, Item, PlayerFrame, PlayerState, Projectile, Prop, Vec3, WorldEvent } from "./types";
 
 export const EYE_HEIGHT = 1.6;
 export const PLAYER_RADIUS = 0.3;
@@ -29,20 +31,20 @@ const REST_ROT = {
   mug: [0, 0]
 };
 export class World {
-  def;
-  static;
-  nav;
-  rng;
-  events = [];
-  enemies = [];
-  props = [];
-  projectiles = [];
-  player;
+  def: LevelDef;
+  static: StaticWorld;
+  nav: NavGrid;
+  rng: Rng;
+  events: WorldEvent[] = [];
+  enemies: Enemy[] = [];
+  props: Prop[] = [];
+  projectiles: Projectile[] = [];
+  player: PlayerState;
   stats = { kills: 0, shots: 0 };
   simTime = 0;
   cleared = false;
   failed = false;
-  aimProp = null;
+  aimProp: Prop | null = null;
   nextId = 1;
   shotCounter = 0;
   waveIndex = 0;
@@ -51,7 +53,7 @@ export class World {
   lastWaveTime = 0;
   spawnQueue = [];
   recentShots = [];
-  constructor(def, sharedStatic) {
+  constructor(def: LevelDef, sharedStatic?: { static: StaticWorld; nav: NavGrid }) {
     this.def = def;
     this.rng = new Rng(def.seed);
     if (sharedStatic) {
@@ -109,7 +111,7 @@ export class World {
       queued += this.def.waves[i].spawns.length;
     return this.enemies.length + queued;
   }
-  applyPlayerFrame(f) {
+  applyPlayerFrame(f: PlayerFrame): boolean {
     const p = this.player;
     copy(p.pos, f.pos);
     copy(p.vel, f.vel);
@@ -600,8 +602,8 @@ export class World {
     if (this.cleared)
       this.player.invulnerable = true;
   }
-  addProp(item, pos, vel, thrown) {
-    const pr = {
+  addProp(item: Item, pos: Vec3, vel: Vec3, thrown: boolean): Prop {
+    const pr: Prop = {
       id: this.nextId++,
       item,
       pos: [pos[0], pos[1], pos[2]],

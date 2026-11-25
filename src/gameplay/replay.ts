@@ -1,8 +1,9 @@
 import { FIXED_STEP } from "../engine/time";
 import { World } from "./world";
+import type { PlayerFrame } from "./types";
 
 export class ReplayRecorder {
-  frames = [];
+  frames: PlayerFrame[] = [];
   reset() {
     this.frames = [];
   }
@@ -16,8 +17,8 @@ export class ReplayRecorder {
   }
 }
 export class ReplayPlayer {
-  frames;
-  world;
+  frames: PlayerFrame[];
+  world: World;
   index = 0;
   simPlayed = 0;
   clock = 0;
@@ -32,7 +33,7 @@ export class ReplayPlayer {
   get progress() {
     return this.frames.length === 0 ? 1 : this.index / this.frames.length;
   }
-  current = null;
+  current: PlayerFrame | null = null;
   update(realDt) {
     this.clock += realDt * this.speed;
     let steps = 0;

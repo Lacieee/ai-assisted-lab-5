@@ -1,6 +1,8 @@
+import type { LevelBox, LevelDef, LevelMeta } from "./types";
+
 
 class LevelBuilder {
-  boxes = [];
+  boxes: LevelBox[] = [];
   box(x0, y0, z0, x1, y1, z1, mat = "wall", collide = true) {
     const min = [Math.min(x0, x1), Math.min(y0, y1), Math.min(z0, z1)];
     const max = [Math.max(x0, x1), Math.max(y0, y1), Math.max(z0, z1)];
@@ -96,7 +98,7 @@ class LevelBuilder {
   }
 }
 
-export function level(meta, build) {
+export function level(meta: LevelMeta, build: (b: LevelBuilder) => void): LevelDef {
   const b = new LevelBuilder();
   build(b);
   return { ...meta, boxes: b.boxes };

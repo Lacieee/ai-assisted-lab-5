@@ -1,3 +1,4 @@
+import type { Enemy, EnemyKind, ItemKind, Vec3 } from "./types";
 import { angleDiff, approach, clamp, copy, distXZ, turnToward, v3, yawOf } from "../engine/vec3";
 import { BULLET_SPEED, WEAPONS, isGun, newItem } from "./items";
 
@@ -21,7 +22,7 @@ const TELEGRAPH = 0.6;
 const MARKSMAN_COOLDOWN = 1.9;
 const GRAVITY = 18;
 const MUZZLE_LOCAL = [0.24, 1.48, -0.72];
-export function createEnemy(id, kind, pos, yaw, weapon, idle, seed) {
+export function createEnemy(id: number, kind: EnemyKind, pos: Vec3, yaw: number, weapon: ItemKind | null | undefined, idle: boolean, seed: number): Enemy {
   const params = ENEMY_PARAMS[kind];
   const w = weapon === void 0 ? params.defaultWeapon : weapon;
   return {
@@ -67,10 +68,10 @@ export function createEnemy(id, kind, pos, yaw, weapon, idle, seed) {
     lastShotId: -1
   };
 }
-export function enemyIsTwoHanded(e) {
+export function enemyIsTwoHanded(e: Enemy) {
   return !!e.weapon && (e.weapon.kind === "scatter" || e.weapon.kind === "carbine");
 }
-export function enemyMuzzle(e, out) {
+export function enemyMuzzle(e: Enemy, out: Vec3): Vec3 {
   const c = Math.cos(e.yaw);
   const s = Math.sin(e.yaw);
   const lx = MUZZLE_LOCAL[0], lz = MUZZLE_LOCAL[2];
@@ -82,7 +83,7 @@ export function enemyMuzzle(e, out) {
 const scratchA = v3();
 const scratchB = v3();
 const scratchC = v3();
-export function savePrev(e) {
+export function savePrev(e: Enemy) {
   copy(e.prevPos, e.pos);
   e.prevYaw = e.yaw;
   e.prevWalkPhase = e.walkPhase;
@@ -253,7 +254,7 @@ export function updateEnemy(world, e, dt) {
   if (e.pos[1] < -6)
     world.killEnemy(e, [0, -1, 0], e.pos, true);
 }
-export function setState(e, s) {
+export function setState(e: Enemy, s: Enemy["state"]) {
   e.state = s;
   e.stateTime = 0;
 }

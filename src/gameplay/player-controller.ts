@@ -1,5 +1,6 @@
 import { clamp, v3 } from "../engine/vec3";
 import { PLAYER_HEIGHT, PLAYER_RADIUS } from "./world";
+import type { PlayerFrame } from "./types";
 
 export const WALK_SPEED = 4;
 const ACCEL = 30;
@@ -83,7 +84,7 @@ export class PlayerController {
   get planarSpeed() {
     return Math.hypot(this.vel[0], this.vel[2]);
   }
-  toFrame(fire, throwItem, interact) {
+  toFrame(fire: boolean, throwItem: boolean, interact: boolean): PlayerFrame {
     return {
       pos: [this.pos[0], this.pos[1], this.pos[2]],
       vel: [this.vel[0], this.vel[1], this.vel[2]],

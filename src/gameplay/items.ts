@@ -1,3 +1,5 @@
+import type { Item, ItemKind, WeaponKind } from "./types";
+
 export const BULLET_SPEED = 25;
 export const BULLET_RADIUS = 0.03;
 export const BULLET_LIFE = 5;
@@ -7,9 +9,9 @@ export const WEAPONS = {
   carbine: { kind: "carbine", ammo: 12, cooldown: 0.55, pellets: 1, spread: 0.6, burst: 3, burstInterval: 0.09, melee: false, muzzle: [0, 0.03, -0.42] },
   blade: { kind: "blade", ammo: 0, cooldown: 0.45, pellets: 0, spread: 0, burst: 0, burstInterval: 0, melee: true, muzzle: [0, 0, -0.6] }
 };
-export const isWeapon = (k) => k in WEAPONS;
-export const isGun = (k) => isWeapon(k) && !WEAPONS[k].melee;
-export function newItem(kind) {
+export const isWeapon = (k: string): k is WeaponKind => k in WEAPONS;
+export const isGun = (k: string): boolean => isWeapon(k) && !WEAPONS[k].melee;
+export function newItem(kind: ItemKind): Item {
   return { kind, ammo: isWeapon(kind) ? WEAPONS[kind].ammo : 0 };
 }
 export const ITEM_NAMES = {
