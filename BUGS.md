@@ -139,3 +139,22 @@ Two causes, both in `src/physics/nav-grid.ts`:
 
 **Why it's a bug:** found by playing. In 1-2 the bot timed out after 85 s of game time with enemies stuck at a
 wall, and the level could not be finished.
+
+### 17. Horizontal mouse look is inverted
+**Status: FIXED** — `PlayerController.look` subtracts the mouse delta from yaw. Regression test:
+`test/playability.test.ts` ("mouse look direction"). Reported by the user while playing.
+
+Yaw grows to the **left** everywhere in the code (`Camera.right` is (cos yaw, 0, −sin yaw)), but `look()` did
+`yaw += mouseDx * sensitivity`, so moving the mouse right turned the view left. The gamepad's right stick
+goes through the same code and was inverted too. Vertical look was correct.
+**Why it's a bug:** every shot needs the opposite hand movement from what every other FPS teaches.
+
+### 18. The screen goes black whenever an enemy shoots at you
+**Status: FIXED** — the warning darkening is capped (12% in the centre, 42% at the edges) in
+`src/render/shaders/final.wgsl`. Verified by screenshot before and after; no automated test, because it's
+GPU output. Reported by the user while playing.
+
+`Game.incomingThreat` sets the threat level to 1 whenever an enemy bullet is within 8 m or a marksman is
+aiming. The final shader multiplied the image by `1 − threat × pulse`, and the pulse is ≈ 1 most of the
+time. The whole frame went black exactly when the player needs to see the bullet to dodge it.
+**Why it's a bug:** the core skill of the game (watch the frozen bullet, step aside) became impossible.

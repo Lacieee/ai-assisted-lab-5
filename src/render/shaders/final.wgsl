@@ -53,7 +53,10 @@ fn fsFinal(fin : FullOut) -> @location(0) vec4f {
 
   let wave = sin(post.camera.z * post.danger.y);
   let threatPulse = smoothstep(0.0, 0.3, abs(wave));
-  mapped *= 1.0 - post.danger.x * threatPulse;
+  // Incoming-fire warning: a pulsing darkening, strongest at the edges. Capped so the centre of the
+  // screen, where the bullet to dodge is, stays visible (BUGS.md #18: it used to go fully black).
+  let threatEdge = smoothstep(0.15, 0.7, radial * 1.6);
+  mapped *= 1.0 - post.danger.x * threatPulse * (0.12 + 0.3 * threatEdge);
 
   let g = grainHash(fin.clipPos.xy + vec2f(post.camera.z * 61.0, post.camera.z * 17.0)) - 0.5;
   mapped += vec3f(g * post.grade.w);

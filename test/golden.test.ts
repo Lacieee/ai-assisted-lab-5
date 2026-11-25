@@ -44,7 +44,13 @@ describe("simulation snapshots", () => {
 
 describe("assets moved out of index.html are unchanged", () => {
   const shaders = import.meta.glob("../src/render/shaders/*.wgsl", { query: "?raw", import: "default", eager: true }) as Record<string, string>;
+  // Shaders changed on purpose since the original, with the bug they fix. Everything else must match.
+  const CHANGED: Record<string, string> = { final: "BUGS.md #18 (screen went black under fire)" };
   for (const name of ["common", "scene", "shadow", "glass", "fx", "post", "outline", "bloom", "final"]) {
+    if (CHANGED[name]) {
+      it.skip(`shader ${name}.wgsl — changed on purpose: ${CHANGED[name]}`, () => {});
+      continue;
+    }
     it(`shader ${name}.wgsl`, () => {
       // The bundle kept a leading newline after the opening backtick; the .wgsl file doesn't.
       expect(shaders[`../src/render/shaders/${name}.wgsl`]).toBe(reference[`${name}_default`].replace(/^\n/, ""));
