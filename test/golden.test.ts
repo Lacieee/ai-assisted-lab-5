@@ -34,7 +34,7 @@ describe("non-gameplay output identical to the original index.html", () => {
 // change must update them in the same commit (`npx vitest run -u`) and explain the difference;
 // the snapshot diff shows the first frame where play diverges.
 // Skipped elsewhere (e.g. Linux x64 CI): the last-bit differences would fail them without a real change.
-describe.skipIf(process.arch !== "arm64")("simulation snapshots (ARM64 only)", () => {
+describe.skipIf(process.arch !== "arm64")("simulation snapshots", () => {
   it("level definitions", () => expect(levelData(cur)).toMatchSnapshot());
   it("collision and navigation", () => expect(buildAllMeshes(cur).filter((l) => !l.includes("|"))).toMatchSnapshot());
   for (let i = 0; i < 15; i++) {
