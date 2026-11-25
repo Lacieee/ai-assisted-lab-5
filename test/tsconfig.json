@@ -1,0 +1,8 @@
+{
+  // Tests run in Node (Vitest), so they get Node's types; src/ stays browser-only.
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "types": ["vite/client", "@webgpu/types", "node"]
+  },
+  "include": [".", "../src"]
+}
