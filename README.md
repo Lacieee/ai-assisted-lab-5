@@ -9,6 +9,7 @@ npm install
 npm run dev        # dev server on http://localhost:5173 with hot reload
 npm run build      # typecheck, then production build into dist/
 npm run preview    # serve dist/ on http://localhost:4173
+npm test           # golden-master test: src/ must behave exactly like the original index.html
 ```
 
 ### From VS Code (F5)
@@ -51,7 +52,11 @@ src/
     static-world.ts   raycasts and character collision
     nav-grid.ts       walkability grid and A* pathfinding for enemies
   gameplay/           the simulation: deterministic and headless (no rendering, DOM or audio)
-    world.ts          all simulation state: player actions, projectiles, props, waves
+    world.ts          simulation state and player actions; step() drives the pieces below
+    waves.ts          when waves fire and the spawn queue
+    projectiles.ts    bullet movement and hits
+    props.ts          physics of items lying around or thrown
+    types.ts          data types: Enemy, Prop, Projectile, WorldEvent ...
     enemy.ts          enemy archetypes and their AI
     items.ts          weapons and throwable items
     player-controller.ts, time-scale-driver.ts, replay.ts
@@ -59,11 +64,13 @@ src/
     mesh-library.ts, fx-system.ts, viewmodel.ts, pose.ts
   levels/             pure data: the 15 levels, split by act
     level-builder.ts  small DSL used to describe rooms, walls, stairs
-    act1-transit.ts, act2-office.ts, act3-rooftops.ts, index.ts
+    act1-transit.ts, act2-office.ts, act3-rooftops.ts, index.ts, types.ts
   ui/
     ui.ts             DOM menus, HUD, settings, results
     debug-overlay.ts
 ```
+
+The reasoning behind this layout, and how behaviour was kept identical, is in [PART2.md](PART2.md).
 
 ### Why this layout
 
