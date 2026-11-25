@@ -1,5 +1,7 @@
 # STILLFRAME
 
+**Play it: https://lacieee.github.io/ai-assisted-lab-5/** (needs a WebGPU browser: recent Chrome or Edge)
+
 A browser FPS where time only moves when you move. It runs on WebGPU, so use a recent Chrome or Edge.
 
 ## Running it
@@ -11,6 +13,12 @@ npm run build      # typecheck, then production build into dist/
 npm run preview    # serve dist/ on http://localhost:4173
 npm test           # golden-master test: src/ must behave exactly like the original index.html
 ```
+
+### Deployment
+
+Every push to `main` runs [.github/workflows/deploy.yml](.github/workflows/deploy.yml). It installs,
+runs `npm test`, builds, and publishes `dist/` to GitHub Pages. A failing test blocks the deploy. The
+build runs on ARM64 macOS because the simulation snapshots are bit-exact (see the workflow comment).
 
 ### From VS Code (F5)
 
