@@ -18,7 +18,7 @@ npm test           # golden-master test: src/ must behave exactly like the origi
 
 Every push to `main` runs [.github/workflows/deploy.yml](.github/workflows/deploy.yml). It installs,
 runs `npm test`, builds, and publishes `dist/` to GitHub Pages. A failing test blocks the deploy. The
-build runs on ARM64 macOS because the simulation snapshots are bit-exact (see the workflow comment).
+bit-exact simulation snapshots run only on ARM64 machines (see `test/golden.test.ts`).
 
 ### From VS Code (F5)
 

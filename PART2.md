@@ -209,10 +209,11 @@ Decisions that make it work from the Pages address and not only locally:
   sub-path. This was checked before pushing by serving `dist/` under `/ai-assisted-lab-5/` locally.
 - **No CDN and no runtime fetches.** `wgpu-matrix` is bundled from npm, the shaders are inlined at build time
   (`?raw` imports), and the audio is synthesized in code. The published site is self-contained.
-- **CI runs on ARM64 macOS with Node 24.14.1.** The simulation snapshots are bit-exact game states recorded on
-  Apple Silicon. The first CI run on Linux x64 failed because V8's `Math.sin/cos/atan2` can round the last bit
-  differently there, and a 40-second simulation amplifies that. Building on the same platform and Node version
-  the snapshots were recorded with fixed it. The deploy job itself runs on Linux.
+- **Bit-exact snapshots only on ARM64.** The simulation snapshots are exact game states recorded on Apple Silicon.
+  The first CI run on Linux x64 failed because V8's `Math.sin/cos/atan2` can round the last bit differently
+  there, and a 40-second simulation amplifies that. A macOS (ARM64) runner fixed it but queued for 10+ minutes,
+  so CI runs on Linux and skips just those snapshots there. Everything else still runs on every push: the
+  side-by-side comparison with the original, the playability tests and the Act 1 playthrough.
 - **Repository settings (one-time):** Settings → Pages → Source: *GitHub Actions*, and `main` as the default
   branch. The `github-pages` environment only accepts deployments from the default branch.
 - **Dev-only code stays out.** The `?nolock` switch and the `window.__game` handle used for automated play
