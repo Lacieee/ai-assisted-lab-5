@@ -25,6 +25,9 @@ describe("non-gameplay output identical to the original index.html", () => {
   it("sound synthesis", () => expect(runSynths(cur)).toEqual(runSynths(reference)));
 });
 
+// Platform note: these snapshots are bit-exact and were recorded on ARM64 (Apple Silicon) with Node 24.14.1.
+// V8's transcendental Math functions can round differently on x64, so run them on the same platform
+// (CI does: see .github/workflows/deploy.yml).
 // Gameplay is allowed to change now that bugs are being fixed (see BUGS.md), so the simulation is
 // pinned by snapshots instead of by the original. The snapshots were first recorded from code that
 // matched the original exactly (commit 13def86 passed the side-by-side comparison). Every behaviour

@@ -19,12 +19,15 @@ concurrency:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    # The simulation snapshots in test/__snapshots__ are bit-exact game states recorded on Apple Silicon.
+    # V8's Math.sin/cos/atan2 can differ in the last bit between ARM64 and x64, which a 40 s simulation
+    # amplifies, so the tests run on the same platform and Node version the snapshots were recorded with.
+    runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
-          node-version: 24
+          node-version: 24.14.1
           cache: npm
       - run: npm ci
       # typecheck + golden-master + playability + playthrough tests: a broken game is never published
