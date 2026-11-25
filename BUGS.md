@@ -17,7 +17,10 @@ level select. Every other level depends on 1-1 being cleared, so nothing is play
 certainly meant to be `index <= 0`. (I saw this in the browser too: clicking PLAY did nothing.)
 
 ### 2. Time-scale driver gets its arguments swapped, so the core mechanic is broken
-`src/app/game.ts:328` calls
+**Status: FIXED** — arguments passed in the right order (now in `src/gameplay/player-frame.ts`). Regression
+tests: `test/playability.test.ts` ("time moves only when you move").
+
+`src/app/game.ts:328` called
 `driver.update(dt, WALK_SPEED, this.player.planarSpeed, ...)`, but the signature in
 `src/gameplay/time-scale-driver.ts:19` is `update(realDt, planarSpeed, maxSpeed, ...)`.
 **Why it looks wrong:** `moveInput` becomes `WALK_SPEED / planarSpeed`. Standing still gives `4 / 0 = Infinity`,

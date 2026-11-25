@@ -30,5 +30,5 @@ export function runPlayerFrame(ctx: PlayerFrameContext, input: PlayerInput, dt: 
   if (acted)
     driver.actionKick();
   const busy = world.player.burstLeft > 0;
-  return driver.update(dt, WALK_SPEED, player.planarSpeed, player.lookSpeed, !player.grounded, busy);
+  return driver.update(dt, player.planarSpeed, WALK_SPEED, player.lookSpeed, !player.grounded, busy);
 }
