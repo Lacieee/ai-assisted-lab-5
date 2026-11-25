@@ -214,7 +214,7 @@ Decisions that make it work from the Pages address and not only locally:
   there, and a 40-second simulation amplifies that. A macOS (ARM64) runner fixed it but queued for 10+ minutes,
   so CI runs on Linux and skips just those snapshots there. Everything else still runs on every push: the
   side-by-side comparison with the original, the playability tests and the Act 1 playthrough.
-- **Repository settings (one-time):** Settings → Pages → Source: *GitHub Actions*, and `master` as the default
-  branch. The `github-pages` environment only accepts deployments from the default branch.
+- **Repository settings (one-time):** Settings → Pages → Source: *GitHub Actions*, and `master` as the branch that deploys:
+  the `github-pages` environment's protection rules allow deployments from `master` only.
 - **Dev-only code stays out.** The `?nolock` switch and the `window.__game` handle used for automated play
   exist only under `import.meta.env.DEV` and are absent from the published bundle.
