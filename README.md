@@ -16,7 +16,7 @@ npm test           # golden-master test: src/ must behave exactly like the origi
 
 ### Deployment
 
-Every push to `main` runs [.github/workflows/deploy.yml](.github/workflows/deploy.yml). It installs,
+Every push to `master` runs [.github/workflows/deploy.yml](.github/workflows/deploy.yml). It installs,
 runs `npm test`, builds, and publishes `dist/` to GitHub Pages. A failing test blocks the deploy. The
 bit-exact simulation snapshots run only on ARM64 machines (see `test/golden.test.ts`).
 
