@@ -1,11 +1,14 @@
 # Suspected bugs
 
 Things that look wrong, noticed while migrating the code to Vite + TypeScript and reading through it.
-**None of these are fixed yet.** Ordered roughly by how much they hurt the player.
+Ordered roughly by how much they hurt the player. Fixed entries say so in a **Status** line and name the
+regression test that guards them.
 
 ## High
 
 ### 1. The first level can never be started
+**Status: FIXED** — `index <= 0`. Regression test: `test/playability.test.ts`.
+
 `src/ui/ui.ts:325` (`isUnlocked`) returns `true` only for `index < 0`. For level 0, `this.levels[-1]` is
 `undefined`, so it returns `false`.
 **Why it looks wrong:** `Game.startLevel` (`src/app/game.ts:168`) bails out on a locked level. On a fresh save
