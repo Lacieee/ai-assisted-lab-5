@@ -1,7 +1,8 @@
 import { Rng } from "../engine/rng";
 import { clamp, copy, dirFromYawPitch, distSq, distXZ, dot, len, normalize, v3 } from "../engine/vec3";
-import { BODY_A, BODY_B, BODY_RADIUS, HEAD_OFFSET, HEAD_RADIUS, createEnemy, enemyMuzzle, savePrev, updateEnemy } from "./enemy";
+import { BODY_A, BODY_B, BODY_RADIUS, HEAD_OFFSET, HEAD_RADIUS, enemyMuzzle, savePrev, updateEnemy } from "./enemy";
 import { BULLET_LIFE, BULLET_RADIUS, BULLET_SPEED, FRAGILE, ITEM_RADIUS, WEAPONS, isGun, isWeapon, newItem } from "./items";
+import { WaveDirector } from "./waves";
 import { NavGrid } from "../physics/nav-grid";
 import { StaticWorld, segmentCapsule, segmentSphere } from "../physics/static-world";
 import type { LevelDef } from "../levels/types";
@@ -47,11 +48,7 @@ export class World {
   aimProp: Prop | null = null;
   nextId = 1;
   shotCounter = 0;
-  waveIndex = 0;
-  waveArmed = false;
-  waveDelay = 0;
-  lastWaveTime = 0;
-  spawnQueue = [];
+  waves = new WaveDirector();
   recentShots = [];
   constructor(def: LevelDef, sharedStatic?: { static: StaticWorld; nav: NavGrid }) {
     this.def = def;
@@ -87,8 +84,8 @@ export class World {
     };
     for (const ps of def.props)
       this.addProp(newItem(ps.kind), ps.pos, [0, 0, 0], false);
-    this.updateWaves(0);
-    this.flushSpawnQueue(true);
+    this.waves.update(this, 0);
+    this.waves.flush(this, true);
   }
   get staticData() {
     return { static: this.static, nav: this.nav };
@@ -106,10 +103,7 @@ export class World {
     return this.enemies.length;
   }
   get remainingEnemies() {
-    let queued = this.spawnQueue.length;
-    for (let i = this.waveIndex; i < this.def.waves.length; i++)
-      queued += this.def.waves[i].spawns.length;
-    return this.enemies.length + queued;
+    return this.enemies.length + this.waves.pendingCount(this);
   }
   applyPlayerFrame(f: PlayerFrame): boolean {
     const p = this.player;
@@ -515,8 +509,8 @@ export class World {
         }
       }
     }
-    this.updateWaves(dt);
-    this.flushSpawnQueue(false);
+    this.waves.update(this, dt);
+    this.waves.flush(this, false);
     for (const e of this.enemies)
       if (e.alive)
         updateEnemy(this, e, dt);
@@ -529,65 +523,10 @@ export class World {
       this.recentShots.shift();
     this.checkWin();
   }
-  updateWaves(dt) {
-    const waves = this.def.waves;
-    while (this.waveIndex < waves.length) {
-      const w = waves[this.waveIndex];
-      if (!this.waveArmed) {
-        let ok = false;
-        const t = w.when;
-        switch (t.type) {
-          case "start":
-            ok = true;
-            break;
-          case "remaining":
-            ok = this.enemies.length + this.spawnQueue.length <= t.count;
-            break;
-          case "zone": {
-            const [x0, z0, x1, z1] = t.rect;
-            const px = this.player.pos[0], pz = this.player.pos[2];
-            ok = px >= Math.min(x0, x1) && px <= Math.max(x0, x1) && pz >= Math.min(z0, z1) && pz <= Math.max(z0, z1);
-            break;
-          }
-          case "time":
-            ok = this.simTime - this.lastWaveTime >= t.seconds;
-            break;
-        }
-        if (!ok)
-          break;
-        this.waveArmed = true;
-        this.waveDelay = w.delay ?? 0;
-      }
-      this.waveDelay -= dt;
-      if (this.waveDelay > 0)
-        break;
-      for (const s of w.spawns)
-        this.spawnQueue.push({ spawn: s });
-      this.waveIndex++;
-      this.waveArmed = false;
-      this.lastWaveTime = this.simTime;
-    }
-  }
-  flushSpawnQueue(initial) {
-    const max = this.def.maxActive ?? 8;
-    while (this.spawnQueue.length > 0 && this.enemies.length < max) {
-      const q = this.spawnQueue.shift();
-      const s = q.spawn;
-      const pos = s.pos.length === 2 ? [s.pos[0], 0.05, s.pos[1]] : [s.pos[0], s.pos[1] + 0.05, s.pos[2]];
-      const yaw = s.yaw ?? Math.atan2(-(this.player.pos[0] - pos[0]), -(this.player.pos[2] - pos[2]));
-      const e = createEnemy(this.nextId++, s.kind, pos, yaw, s.weapon, !!s.idle, this.rng.next());
-      if (initial)
-        e.spawnT = 1;
-      e.prevSpawnT = e.spawnT;
-      this.enemies.push(e);
-      if (!initial)
-        this.events.push({ type: "spawn", pos: [pos[0], pos[1], pos[2]] });
-    }
-  }
   checkWin() {
     if (this.cleared || this.failed || !this.player.alive)
       return;
-    const allSpawned = this.waveIndex >= this.def.waves.length && this.spawnQueue.length === 0;
+    const allSpawned = this.waves.allSpawned(this);
     const allDead = allSpawned && this.enemies.length === 0;
     const exit = this.def.exit;
     if (exit) {
